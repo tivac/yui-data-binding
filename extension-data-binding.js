@@ -2,20 +2,27 @@ YUI.add("extension-data-binding", function(Y) {
 
     var DataBinding = function() {};
 
-    DataBindig.ATTRS = {
-        _db : null
-    };
-
     DataBinding.prototype = {
         initializer : function(config) {
-            this._dbHandles = [
-                Y.Do.after(this._afterRender, this, "render", this),
-                this.on("_dbChange", this._dbChange, this)
-            ];
+            this._dbHandles = {
+                global : [],
+                source : [],
+                dom    : []
+            };
+            
+            this._dbEvents   = {};
+            this._dbBindings = {};
+            
+            this._dbHandles.global.push(
+                Y.Do.after(this._afterRender, this, "render", this)
+            );
         },
 
         destructor : function() {
-            new EventTarget(this._dbHandles).detach();
+            Y.Object.each(this._dbHandles, function detachHandle(handles) {
+                new EventTarget(handles).detach();
+            });
+            
 
             this._dbHandles = null;
         },
@@ -23,18 +30,70 @@ YUI.add("extension-data-binding", function(Y) {
         _afterRender : function() {
             var container = this.get("container"),
                 nodes     = Y.all("[data-bound]");
-
-            nodes.each(function(node) {
-                console.log(node.getDOMNode()); // TODO: Remove Debugging
+            
+            if(!this._dbSource) {
+                this.bindingSource(this);
+            }
+            
+            nodes.each(this._bindNode, this);
+        },
+        
+        _bindNode : function(node) {
+            var _this  = this,
+                config = node.getData("bound");
+                
+            if(!config) {
+                return;
+            }
+            
+            config.split(";").forEach(function parseBindings(binding) {
+                var parts = binding.split(":"),
+                    dom   = parts[0],
+                    attr  = parts[1];
+                
+                console.log(dom + " <=> " + attr);
+                
+                // simplest possible binding
+                if(dom === "value") {
+                    return _this._bindValue({
+                        node : node,
+                        dom  : dom,
+                        attr : attr
+                    });
+                }
             });
         },
-
-        _dbChange : function(e) {
-            console.log(e); // TODO: Remove Debugging
+        
+        _bindValue : function(args) {
+            var _this = this;
+            
+            this._dbHandles.dom.push(
+                args.node.on("input", function(e) {
+                    _this.set(args.attr, this.get(args.dom), { source : "dom" });
+                })
+            );
+            
+            this._dbHandles.source.push(
+                _this._dbSource.after(args.attr + "Change", function(e) {
+                    if(e.source === "dom") {
+                        return;
+                    }
+                    
+                    args.node.set(args.dom, e.newVal);
+                })
+            );
         },
 
         // Public API
-        bindingSource : this.set.bind(this, "_db")
+        bindingSource : function(source) {
+            if(this._dbSource) {
+                // TODO: unbind from existing source
+            }
+            
+            this._dbSource = source;
+            
+            // TODO: bind to new source
+        }
     };
 
     Y.namespace("Extensions").DataBinding = DataBinding;
@@ -43,6 +102,7 @@ YUI.add("extension-data-binding", function(Y) {
     requires : [
         "node-base",
         "event-custom",
-        "event-delegate"
+        "event-delegate",
+        "node-event-html5"
     ]
 });
