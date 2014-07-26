@@ -1,0 +1,23 @@
+{
+  "name": "extension-data-binding",
+  "version": "0.0.0",
+  "description": "Two-way databinding for YUI Views",
+  "main": "extension-data-binding.js",
+  "dependencies": {
+  },
+  "scripts": {
+    "test": "http-server"
+  },
+  "keywords": [
+    "yui",
+    "databinding",
+    "view",
+    "dom"
+  ],
+  "author": "Pat Cavit <pcavit@arena.net>",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^0.6.1",
+    "mocha": "^1.21.0"
+  }
+}

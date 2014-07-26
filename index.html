@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Binding Extension Tests</title>
+</head>
+<body>
+
+<div id="test">
+
+</div>
+
+<script src="http://yui.yahooapis.com/3.17.2/build/yui/yui-min.js"></script>
+<script src="./extension-data-binding.js"></script>
+<script>
+var modules = [
+    "extension-data-binding",
+    "view",
+    "model",
+    "base-create"
+],
+Y = YUI().use(modules, function(Y) {
+    var View = Y.Base.create("view", Y.View, [ Y.Extensions.DataBinding ], {
+            initializer : function() {
+                
+            }
+        }, {
+            ATTRS : {
+                container : {
+                    value : "#test"
+                }
+            }
+        })
+});
+</script>
+</body>
+</html>
