@@ -61,6 +61,13 @@ YUI.add("extension-data-binding", function(Y) {
                         attr : attr
                     });
                 }
+                
+                // Simple fallback
+                _this._bindAttr({
+                    node : node,
+                    dom  : dom,
+                    attr : attr
+                });
             });
         },
         
@@ -80,6 +87,16 @@ YUI.add("extension-data-binding", function(Y) {
                     }
                     
                     args.node.set(args.dom, e.newVal);
+                })
+            );
+        },
+        
+        _bindAttr : function(args) {
+            var _this = this;
+            
+            this._dbHandles.source.push(
+                _this._dbSource.after(args.attr + "Change", function(e) {
+                    args.node.setAttribute(args.dom, e.newVal);
                 })
             );
         },

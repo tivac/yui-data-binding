@@ -2,6 +2,12 @@
 <html>
 <head>
     <title>Data Binding Extension Tests</title>
+    <style>
+        .red, .blue, .green { color : white; }
+        .red   { background: red; }
+        .blue  { background: blue; }
+        .green { background: green; }
+    </style>
 </head>
 <body>
 
@@ -10,7 +16,8 @@
 </div>
 
 <script type="text/template" id="template">
-    <input type="text" data-bound="value:text" />
+    <p><input type="text" data-bound="value:text" /></p>
+    <p><input type="text" data-bound="class:color;value:text" /></p>
 </script>
 <script src="http://yui.yahooapis.com/3.17.2/build/yui/yui-min.js"></script>
 <script src="/extension-data-binding.js"></script>
@@ -34,7 +41,10 @@ Y = YUI().use(modules, function(Y) {
             ATTRS : {
                 container : {
                     value : "#test"
-                }
+                },
+                
+                text  : null,
+                color : null
             }
         }),
         view = new View();
