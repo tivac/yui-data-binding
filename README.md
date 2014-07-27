@@ -1,18 +1,34 @@
-extension-data-binding
+yui-data-binding
 ======================
 
-Simple extension to provide one/two-way data-binding for YUI Views.
+Simple library to provide one/two-way data-binding for YUI.
 
 ## Usage
 
-Mix the extension into your `Y.View`s.
+Simple invoke the constructor, passing in a root node & data source (which should be using Y.Attribute).
 
-    var View = Y.Base.create(
-            "view",
-            Y.View,
-            [ Y.Extensions.DataBinding ],
-            { ... }
-        );
+```javascript
+var view = new Y.View({
+        template : ...
+    });
+
+view.render = function() {
+    this.get("container").setHTML(this.template());
+    
+    this.binding = new Y.DataBinding({
+        // DataBinding uses delegates, so attaching to the container means
+        // you don't have to re-parse the DOM every time the view is
+        // re-rendered
+        root   : this.get("container"),
+        
+        // This will use the view instances attributes, you could easily
+        // pass a model here instead.
+        source : this
+    });
+
+    return this;
+}
+```
 
 All binding configuration comes from the `data-bound` element and follows a simple format.
 
@@ -26,8 +42,6 @@ The `<dom attribute>` can be any dom attribute like `class` and `style` or it ca
 - `value` has some special behaviors/logic around it, but in general does what you'd expect. It'll set the `value` of the element to the value of the `<yui attribute>`.
 
 Multiple bindings are separated with the `;` key, and there is no limit imposed beyond however many it'd take to crash/freeze the browser.
-
-By default the views own attributes are used, but you can specify a different source for binding data by using  `this.bindingSource()`.
 
 ## Examples
 
