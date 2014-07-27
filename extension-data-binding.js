@@ -1,6 +1,14 @@
 YUI.add("extension-data-binding", function(Y) {
 
     var DataBinding = function() {};
+    
+    DataBinding.ATTR2EVENT = {
+        value : "input"
+    };
+    
+    DataBinding.EVENT2ATTR = {
+        input : "value"
+    };
 
     DataBinding.prototype = {
         initializer : function(config) {
@@ -10,8 +18,10 @@ YUI.add("extension-data-binding", function(Y) {
                 dom    : []
             };
             
-            this._dbEvents   = {};
-            this._dbBindings = {};
+            this._dbBindings = {
+                events : {},
+                attrs  : {}
+            };
             
             this._dbHandles.global.push(
                 Y.Do.after(this._afterRender, this, "render", this)
@@ -23,24 +33,42 @@ YUI.add("extension-data-binding", function(Y) {
                 new EventTarget(handles).detach();
             });
             
-
             this._dbHandles = null;
         },
 
         _afterRender : function() {
-            var container = this.get("container"),
-                nodes     = Y.all("[data-bound]");
+            var _this     = this,
+                container = this.get("container"),
+                nodes     = container.all("[data-bound]"),
+                handles   = this._dbHandles;
             
             if(!this._dbSource) {
                 this.bindingSource(this);
             }
             
-            nodes.each(this._bindNode, this);
+            nodes.each(this._parseNode, this);
+            
+            Y.Object.each(this._dbBindings.events, function(listeners, event) {
+                listeners.forEach(function(listener) {
+                    handles.dom.push(
+                        Y.delegate(event, _this["_" + event + "Event"], container, listener.id, _this, listener.attr)
+                    );
+                });
+            });
+            
+            Y.Object.each(this._dbBindings.attrs, function(listeners, attr) {
+                handles.source.push(
+                    _this._dbSource.on(attr + "Change", _this._attrChange, _this, listeners)
+                );
+            });
         },
         
-        _bindNode : function(node) {
-            var _this  = this,
-                config = node.getData("bound");
+        _parseNode : function(node) {
+            var _this     = this,
+                container = this.get("container"),
+                id        = "#" + node.generateID(),
+                config    = node.getData("bound"),
+                bindings  = this._dbBindings;
                 
             if(!config) {
                 return;
@@ -48,57 +76,68 @@ YUI.add("extension-data-binding", function(Y) {
             
             config.split(";").forEach(function parseBindings(binding) {
                 var parts = binding.split(":"),
-                    dom   = parts[0],
-                    attr  = parts[1];
+                    type   = parts[0],
+                    attr  = parts[1],
+                    event = DataBinding.ATTR2EVENT[type];
                 
-                console.log(dom + " <=> " + attr);
+                console.log("%o has binding %s <=> %s", node.getDOMNode(), type, attr);
                 
-                // simplest possible binding
-                if(dom === "value") {
-                    return _this._bindValue({
-                        node : node,
-                        dom  : dom,
+                // This work only happens if the dom attribute can be mapped to a dom event
+                if(event) {
+                    if(!bindings.events[event]) {
+                        bindings.events[event] = [];
+                    }
+                    
+                    bindings.events[event].push({
+                        id   : id,
                         attr : attr
                     });
                 }
                 
-                // Simple fallback
-                _this._bindAttr({
-                    node : node,
-                    dom  : dom,
-                    attr : attr
+                // The binding from YUI Attribute -> dom attribute always happens
+                if(!bindings.attrs[attr]) {
+                    bindings.attrs[attr] = [];
+                }
+                
+                bindings.attrs[attr].push({
+                    id   : id,
+                    type : type
                 });
             });
         },
-        
-        _bindValue : function(args) {
-            var _this = this;
-            
-            this._dbHandles.dom.push(
-                args.node.on("input", function(e) {
-                    _this.set(args.attr, this.get(args.dom), { source : "dom" });
-                })
-            );
-            
-            this._dbHandles.source.push(
-                _this._dbSource.after(args.attr + "Change", function(e) {
-                    if(e.source === "dom") {
-                        return;
-                    }
-                    
-                    args.node.set(args.dom, e.newVal);
-                })
+
+        _inputEvent : function(e, attr) {
+            this.set(
+                attr,
+                e.target.get(DataBinding.EVENT2ATTR[e.type]),
+                {
+                    source : "#" + e.target.generateID(),
+                    type   : e.type
+                }
             );
         },
         
-        _bindAttr : function(args) {
-            var _this = this;
+        _attrChange : function(e, listeners) {
+            var container = this.get("container");
             
-            this._dbHandles.source.push(
-                _this._dbSource.after(args.attr + "Change", function(e) {
-                    args.node.setAttribute(args.dom, e.newVal);
-                })
-            );
+            listeners.forEach(function(listener) {
+                if(e.source === listener.id && e.type === listener.type) {
+                    return;
+                }
+                
+                var node = container.one(listener.id),
+                    type = listener.type;
+                
+                if(type === "value" || type === "text") {
+                    return node.set(type, e.newVal);
+                }
+                
+                if(type === "class") {
+                    return node.replaceClass(e.prevVal, e.newVal);
+                }
+
+                node.setAttribute(type, e.newVal);
+            });
         },
 
         // Public API

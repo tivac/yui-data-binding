@@ -17,9 +17,10 @@
 
 <script type="text/template" id="template">
     <p><input type="text" data-bound="value:text" /></p>
-    <p><input type="text" data-bound="class:color;value:text" /></p>
+    <p><input type="text" data-bound="class:text;value:text" /></p>
+    <p data-bound="text:text2">Placeholder text</p>
 </script>
-<script src="http://yui.yahooapis.com/3.17.2/build/yui/yui-min.js"></script>
+<script src="http://yui.yahooapis.com/3.17.2/build/yui/yui.js"></script>
 <script src="/extension-data-binding.js"></script>
 <script>
 var modules = [
@@ -28,7 +29,7 @@ var modules = [
     "model",
     "base"
 ],
-Y = YUI().use(modules, function(Y) {
+Y = YUI({ combine : false, filter : "raw" }).use(modules, function(Y) {
     var View = Y.Base.create("view", Y.View, [ Y.Extensions.DataBinding ], {
             template : Y.one("#template").get("text"),
             
@@ -43,8 +44,15 @@ Y = YUI().use(modules, function(Y) {
                     value : "#test"
                 },
                 
-                text  : null,
-                color : null
+                text  : {
+                    value : null,
+                    setter : function(value, attr, extra) {
+                        this.set("text2", value + value);
+                        
+                        return value;
+                    }
+                },
+                text2 : null
             }
         }),
         view = new View();
