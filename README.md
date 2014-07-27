@@ -19,7 +19,7 @@ All binding configuration comes from the `data-bound` element and follows a simp
     data-bound="<dom attribute>:<yui attribute>"
     data-bound="<dom>:<yui>;<dom>:<yui>"
 
-The `<dom attribute>` can be any dom attribute like `class`, `style`, or it can be one of a few special attributes.
+The `<dom attribute>` can be any dom attribute like `class` and `style` or it can be one of a few special attributes.
 
 - `text` will set the `innerText` of the element to the HTML-escaped value of the `<yui attribute>`.
 - `html` will set the `innerHTML` of the element to the value of the `<yui attribute>`.
