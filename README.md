@@ -44,5 +44,6 @@ Changes to the `child` attribute of the View will be reflected in the `innerHTML
     <input type="text" data-bound="value:text;class:status" />
 Changes to the `value` of this input will update the `text` attribute on the View, and changes to the `text` attribute on the View will be reflected in the inputs `value`. Changes to the `status` attribute on the View will be reflected in the `class` of the input.
 
+## Caveats
 
-    
+This is never going to be a React/Angular level project. I want simple, straightforward two-way databinding without all the other flopping around. Working seamlessly within YUI is also important. You'll still have to be making good choices about when & how to use this, it won't prevent you from blowing off your feet.
